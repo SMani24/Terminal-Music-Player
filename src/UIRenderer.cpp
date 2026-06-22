@@ -17,7 +17,7 @@ void UIRenderer::clearScreen() {
 
 void UIRenderer::printHeader(const string& title) {
     clearScreen();
-    cout << "========================================\n";
-    cout << "  " << title << "\n";
-    cout << "========================================\n\n";
+clearScreen();
+    cout << "terminal-music-player - " << title << "\n";
+    cout << "--------------------------------------------------\n\n";
 }

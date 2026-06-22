@@ -34,3 +34,8 @@ string InputHandler::readLine() {
     getline(cin, input);
     return input;
 }
+
+void InputHandler::pauseForUser() {
+    cout << "\n Press Enter to return to the menu.";
+    cin.get();
+}

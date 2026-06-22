@@ -10,22 +10,43 @@
 #include "UIRenderer.hpp"
 #include "InputHandler.hpp"
 #include <iostream>
+#include <string>
 
 using namespace std;
 
 void MainMenuScreen::render() {
-    UIRenderer::printHeader("Terminal Music Player - Main Menu");
+    UIRenderer::clearScreen();
+    
+    cout << COLOR_CYAN << "╔══════════════════════════════════════════════════════╗\n";
+    
+    cout << "║ " << COLOR_YELLOW << "♫ Terminal Music Player ♫                            " << COLOR_CYAN << "║\n";
+    cout << "╠══════════════════════════════════════════════════════╣\n";
     
     string lastSong = app->getConfig()->get("last_song", "None");
-    if (lastSong != "None") {
-        cout << "Last played: " << lastSong << "\n\n";
+    string content = "Last played: " + lastSong;
+    
+    int spacesNeeded = 52 - content.length();
+    
+    if (spacesNeeded < 0) {
+        content = content.substr(0, 48) + "...";
+        spacesNeeded = 0;
     }
-
-    cout << "1. Now Playing\n";
-    cout << "2. Playlists\n";
-    cout << "3. Browse Playlist\n";
-    cout << "4. Settings\n";
-    cout << "0. Quit (saves state)\n\n";
+    
+    string padding(spacesNeeded, ' ');
+    
+    cout << "║ " << COLOR_RESET << content << padding << COLOR_CYAN << " ║\n";
+    cout << "╠══════════════════════════════════════════════════════╣\n";
+    
+    cout << "║ " << COLOR_RESET << "1. Now Playing                                       " << COLOR_CYAN << "║\n";
+    cout << "║ " << COLOR_RESET << "2. Playlists                                         " << COLOR_CYAN << "║\n";
+    cout << "║ " << COLOR_RESET << "3. Browse Playlist                                   " << COLOR_CYAN << "║\n";
+    cout << "║ " << COLOR_RESET << "4. Settings                                          " << COLOR_CYAN << "║\n";
+    cout << "╠══════════════════════════════════════════════════════╣\n";
+    
+    cout << "║ " << COLOR_RESET << "0. Quit (saves state)                                " << COLOR_CYAN << "║\n";
+    
+    cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
+    
     cout << "Enter choice: ";
 }
 
@@ -34,16 +55,20 @@ void MainMenuScreen::handleInput() {
 
     switch (choice) {
         case 1:
-            cout << "Now Playing Screen not implemented yet.\n";
+            cout << "\nNow Playing Screen not implemented yet.\n";
+            InputHandler::pauseForUser();
             break;
         case 2:
-            cout << "Playlists Screen not implemented yet.\n";
+            cout << "\nPlaylists Screen not implemented yet.\n";
+            InputHandler::pauseForUser();
             break;
         case 3:
-            cout << "Browse Screen not implemented yet.\n";
+            cout << "\nBrowse Screen not implemented yet.\n";
+            InputHandler::pauseForUser();
             break;
         case 4:
-            cout << "Settings Screen not implemented yet.\n";
+            cout << "\nSettings Screen not implemented yet.\n";
+            InputHandler::pauseForUser();
             break;
         case 0:
             app->shutdown();
