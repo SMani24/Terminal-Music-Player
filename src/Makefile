@@ -1,6 +1,6 @@
 # Compiler and compilation flags
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++17 -g
+CXXFLAGS = -Wall -Wextra -std=c++17 -g -pthread -lm
 
 # Target executable name
 TARGET = music_player_test

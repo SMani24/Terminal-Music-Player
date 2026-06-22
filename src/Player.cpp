@@ -6,6 +6,7 @@
  * Constant names: UPPER_SNAKE_CASE
  */
 
+#define MINIAUDIO_IMPLEMENTATION
 #include "Player.hpp"
 #include <iostream>
 
@@ -16,6 +17,18 @@ Player::Player() {
     mode = PlaybackMode::NO_REPEAT;
     currentPlaylist = nullptr;
     currentIndex = -1;
+    isSoundLoaded = false;
+
+    if (ma_engine_init(NULL, &engine) != MA_SUCCESS) {
+        cerr << "Failed to initialize miniaudio engine!\n";
+    }
+}
+
+Player::~Player() {
+    if (isSoundLoaded) {
+        ma_sound_uninit(&sound);
+    }
+    ma_engine_uninit(&engine);
 }
 
 void Player::setPlaylist(Playlist* playlist) {
@@ -28,10 +41,7 @@ void Player::setMode(PlaybackMode newMode) {
 }
 
 void Player::play(int index) {
-    if (currentPlaylist == nullptr || currentPlaylist->getSongs().empty()) {
-        cerr << "Error: Playlist is empty or not set.\n";
-        return;
-    }
+    if (currentPlaylist == nullptr || currentPlaylist->getSongs().empty()) return;
 
     if (index >= 0 && index < currentPlaylist->getSongs().size()) {
         currentIndex = index;
@@ -39,29 +49,50 @@ void Player::play(int index) {
         currentIndex = 0;
     }
 
+    Song* songToPlay = getCurrentSong();
+    if (!songToPlay) return;
+
+    if (isSoundLoaded) {
+        ma_sound_uninit(&sound);
+        isSoundLoaded = false;
+    }
+
+    if (ma_sound_init_from_file(&engine, songToPlay->getFilePath().c_str(), 0, NULL, NULL, &sound) != MA_SUCCESS) {
+        cerr << "Warning: Failed to load audio file: " << songToPlay->getFilePath() << "\n";
+        return; 
+    }
+
+    isSoundLoaded = true;
+    ma_sound_start(&sound);
     state = PlayerState::PLAYING;
     
-    cout << "PLAYING: " << getCurrentSong()->getTitle() << "\n";
+    cout << "Playing: " << songToPlay->getTitle() << " by " << songToPlay->getArtist() << "\n";
 }
 
 void Player::pause() {
-    if (state == PlayerState::PLAYING) {
+    if (state == PlayerState::PLAYING && isSoundLoaded) {
+        ma_sound_stop(&sound);
         state = PlayerState::PAUSED;
-        cout << "PAUSED\n";
+        cout << "Paused. \n";
     }
 }
 
 void Player::resume() {
-    if (state == PlayerState::PAUSED) {
+    if (state == PlayerState::PAUSED && isSoundLoaded) {
+        ma_sound_start(&sound);
         state = PlayerState::PLAYING;
-        cout << "RESUMED\n";
+        cout << "Resumed.\n";
     }
 }
 
 void Player::stop() {
+    if (isSoundLoaded) {
+        ma_sound_stop(&sound);
+        ma_sound_seek_to_pcm_frame(&sound, 0);
+    }
     state = PlayerState::STOPPED;
     currentIndex = -1;
-    cout << "STOPPED\n";
+    cout << "Stopped.\n";
 }
 
 void Player::advanceIndex() {
@@ -106,6 +137,12 @@ void Player::prev() {
 
     if (state != PlayerState::STOPPED) {
         play(currentIndex);
+    }
+}
+
+void Player::tick() {
+    if (state == PlayerState::PLAYING && isSoundLoaded && ma_sound_at_end(&sound)) {
+        next();
     }
 }
 
