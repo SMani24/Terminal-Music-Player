@@ -43,7 +43,7 @@ void Player::setMode(PlaybackMode newMode) {
 void Player::play(int index) {
     if (currentPlaylist == nullptr || currentPlaylist->getSongs().empty()) return;
 
-    if (index >= 0 && index < currentPlaylist->getSongs().size()) {
+    if (index >= 0 && index < static_cast<int>(currentPlaylist->getSongs().size())) {
         currentIndex = index;
     } else if (currentIndex == -1) {
         currentIndex = 0;
@@ -57,8 +57,10 @@ void Player::play(int index) {
         isSoundLoaded = false;
     }
 
-    if (ma_sound_init_from_file(&engine, songToPlay->getFilePath().c_str(), 0, NULL, NULL, &sound) != MA_SUCCESS) {
-        cerr << "Warning: Failed to load audio file: " << songToPlay->getFilePath() << "\n";
+    string fullPath = "Data/" + songToPlay->getFilePath();
+    
+    if (ma_sound_init_from_file(&engine, fullPath.c_str(), 0, NULL, NULL, &sound) != MA_SUCCESS) {
+        cerr << "Warning: Failed to load audio file: " << fullPath << "\n";
         return; 
     }
 
@@ -147,7 +149,7 @@ void Player::tick() {
 }
 
 Song* Player::getCurrentSong() const {
-    if (currentPlaylist != nullptr && currentIndex >= 0 && currentIndex < currentPlaylist->getSongs().size()) {
+    if (currentPlaylist != nullptr && currentIndex >= 0 && currentIndex < static_cast<int> (currentPlaylist->getSongs().size())) {
         return currentPlaylist->getSongs()[currentIndex];
     }
     return nullptr;

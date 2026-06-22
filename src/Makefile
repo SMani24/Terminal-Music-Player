@@ -6,7 +6,7 @@ CXXFLAGS = -Wall -Wextra -std=c++17 -g -pthread -lm
 TARGET = music_player_test
 
 # Source files
-SRCS = main.cpp Song.cpp MusicLibrary.cpp CsvLoader.cpp Playlist.cpp M3uLoader.cpp
+SRCS = main.cpp Song.cpp MusicLibrary.cpp CsvLoader.cpp Playlist.cpp M3uLoader.cpp Player.cpp
 
 # Object files (automatically swaps .cpp extension for .o)
 OBJS = $(SRCS:.cpp=.o)
