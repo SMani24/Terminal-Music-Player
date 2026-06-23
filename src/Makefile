@@ -17,7 +17,9 @@ SRCS = main.cpp \
        InputHandler.cpp \
        UIRenderer.cpp \
        MainMenuScreen.cpp \
+       NowPlayingScreen.cpp \
        Application.cpp
+       
 # Object files (automatically swaps .cpp extension for .o)
 OBJS = $(SRCS:.cpp=.o)
 

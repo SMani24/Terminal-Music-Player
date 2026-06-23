@@ -157,3 +157,4 @@ Song* Player::getCurrentSong() const {
 
 PlayerState Player::getState() const { return state; }
 PlaybackMode Player::getMode() const { return mode; }
+Playlist* Player::getCurrentPlaylist() const { return currentPlaylist; }

@@ -54,6 +54,7 @@ public:
     void tick(); 
     
     Song* getCurrentSong() const;
+    Playlist* getCurrentPlaylist() const;
     PlayerState getState() const;
     PlaybackMode getMode() const;
 };
