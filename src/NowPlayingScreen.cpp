@@ -20,20 +20,26 @@ void NowPlayingScreen::render() {
     UIRenderer::clearScreen();
     
     cout << COLOR_BLUE << "╔══════════════════════════════════════════════════════╗\n";
-    cout << "║ " << COLOR_YELLOW << "Now Playing                                          " << COLOR_BLUE << "║\n";
+    
+    cout << "║ " << COLOR_YELLOW << left << setw(52) << setfill(' ') << "Now Playing" << COLOR_BLUE << " ║\n";
     cout << "╠══════════════════════════════════════════════════════╣\n";
 
     Player* player = app->getPlayer();
     Song* currentSong = player->getCurrentSong();
 
     if (currentSong == nullptr) {
-        cout << "║ " << COLOR_RED << "No song is currently playing or selected.            " << COLOR_BLUE << "║\n";
+        cout << "║ " << COLOR_RED << left << setw(52) << setfill(' ') << "No song is currently playing or selected." << COLOR_BLUE << " ║\n";
     } else {
         
         auto drawPaddedLine = [](const string& label, const string& value, const string& valueColor) {
             string rawText = label + value;
-            int spacesNeeded = 52 - rawText.length();
+            int visualLength = rawText.length();
             
+            if (label == "► ") {
+                visualLength -= 2; 
+            }
+            
+            int spacesNeeded = 52 - visualLength;
             if (spacesNeeded < 0) {
                 spacesNeeded = 0;
             }
@@ -48,7 +54,7 @@ void NowPlayingScreen::render() {
         drawPaddedLine("Genre:  ", currentSong->getGenre(), COLOR_WHITE);
         drawPaddedLine("Year:   ", "[" + to_string(currentSong->getYear()) + "]", COLOR_WHITE);
         
-        cout << "║                                                      ║\n";
+        cout << COLOR_BLUE << "║ " << setw(52) << setfill(' ') << "" << " ║\n";
 
         string stateStr, stateColor;
         switch (player->getState()) {
@@ -82,10 +88,10 @@ void NowPlayingScreen::render() {
         drawPaddedLine("Duration: ", ss.str(), COLOR_WHITE);
     }
 
-    // Controls Footer
     cout << COLOR_BLUE << "╠══════════════════════════════════════════════════════╣\n";
-    cout << "║ " << COLOR_WHITE << "[p] pause/play  [n] next  [b] prev  [s] stop        " << COLOR_BLUE << "║\n";
-    cout << "║ " << COLOR_WHITE << "[0] menu                                             " << COLOR_BLUE << "║\n";
+    
+    cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[p] pause/play  [n] next  [b] prev  [s] stop" << COLOR_BLUE << " ║\n";
+    cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[0] menu" << COLOR_BLUE << " ║\n";
     cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
     
     cout << COLOR_CYAN << "Choice: " << COLOR_RESET;

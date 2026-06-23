@@ -1,8 +1,11 @@
 #include "Application.hpp"
 
 int main() {
-    Application app;
-    app.init();
-    app.run();
+    Application* app = new Application();
+    
+    app->init();
+    app->run();
+    
+    delete app;
     return 0;
 }

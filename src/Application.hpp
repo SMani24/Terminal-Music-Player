@@ -10,12 +10,14 @@
 #include "Player.hpp"
 #include "ConfigManager.hpp"
 #include "Screen.hpp"
+#include <vector>
 
 class Application {
 private:
     MusicLibrary library;
     Player player;
     ConfigManager config;
+    std::vector<Playlist> playlists;
     
     Screen* activeScreen;
     bool running;
@@ -30,5 +32,6 @@ public:
     void changeScreen(Screen* newScreen);
 
     Player* getPlayer() { return &player; }
-    ConfigManager* getConfig() { return &config; }
+    ConfigManager* getConfig() { return &config; }    
+    std::vector<Playlist>& getPlaylists() { return playlists; } 
 };
