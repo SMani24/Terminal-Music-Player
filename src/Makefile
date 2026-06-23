@@ -20,6 +20,7 @@ SRCS = main.cpp \
        NowPlayingScreen.cpp \
        PlaylistsScreen.cpp \
        SettingsScreen.cpp \
+       BrowseScreen.cpp \
        Application.cpp
 
 # Object files (automatically swaps .cpp extension for .o)

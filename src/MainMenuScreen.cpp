@@ -9,6 +9,7 @@
 #include "PlaylistsScreen.hpp"
 #include "MainMenuScreen.hpp"
 #include "SettingsScreen.hpp"
+#include "BrowseScreen.hpp"
 #include "InputHandler.hpp"
 #include "Application.hpp"
 #include "UIRenderer.hpp"
@@ -64,8 +65,7 @@ void MainMenuScreen::handleInput() {
             app->changeScreen(new PlaylistsScreen(app));
             break;
         case 3:
-            cout << "\nBrowse Screen not implemented yet.\n";
-            InputHandler::pauseForUser();
+            app->changeScreen(new BrowseScreen(app));
             break;
         case 4:
             app->changeScreen(new SettingsScreen(app));
