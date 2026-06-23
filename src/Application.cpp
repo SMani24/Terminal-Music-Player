@@ -40,6 +40,17 @@ void Application::init() {
     }
 
     string activePlaylistName = config.get("active_playlist", "");
+    string savedMode = config.get("playback_mode", "NO_REPEAT");
+    if (savedMode == "REPEAT_ONE") {
+        player.setMode(PlaybackMode::REPEAT_ONE);
+    } else if (savedMode == "REPEAT_ALL") {
+        player.setMode(PlaybackMode::REPEAT_ALL);
+    } else if (savedMode == "SHUFFLE") {
+        player.setMode(PlaybackMode::SHUFFLE);
+    } else {
+        player.setMode(PlaybackMode::NO_REPEAT);
+    }
+    
     Playlist* startingPlaylist = nullptr;
 
     for (auto& pl : playlists) {

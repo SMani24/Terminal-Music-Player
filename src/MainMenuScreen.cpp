@@ -8,6 +8,7 @@
 #include "NowPlayingScreen.hpp"
 #include "PlaylistsScreen.hpp"
 #include "MainMenuScreen.hpp"
+#include "SettingsScreen.hpp"
 #include "InputHandler.hpp"
 #include "Application.hpp"
 #include "UIRenderer.hpp"
@@ -67,8 +68,7 @@ void MainMenuScreen::handleInput() {
             InputHandler::pauseForUser();
             break;
         case 4:
-            cout << "\nSettings Screen not implemented yet.\n";
-            InputHandler::pauseForUser();
+            app->changeScreen(new SettingsScreen(app));
             break;
         case 0:
             app->shutdown();
