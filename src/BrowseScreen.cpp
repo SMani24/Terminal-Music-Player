@@ -6,6 +6,7 @@
  * Constant names: UPPER_SNAKE_CASE
  */
 #include "BrowseScreen.hpp"
+#include "FilterScreen.hpp"
 #include "MainMenuScreen.hpp"
 #include "NowPlayingScreen.hpp"
 #include "Application.hpp"
@@ -20,7 +21,9 @@
 
 using namespace std;
 
-BrowseScreen::BrowseScreen(Application* appPtr) : Screen(appPtr) {
+BrowseScreen::BrowseScreen(Application* appPtr, FilterType fType, string fValue) 
+    : Screen(appPtr), currentFilterType(fType), currentFilterValue(fValue) {
+    
     showSortMenu = false;
     currentSort = SortCriteria::TITLE;
     sortAscending = true;
@@ -28,21 +31,27 @@ BrowseScreen::BrowseScreen(Application* appPtr) : Screen(appPtr) {
     isSearchMode = false;
     searchQuery = "";
 
-    updateDisplay();
+    updateDisplay(); 
 }
 
 void BrowseScreen::updateDisplay() {
+    applyFilters();
+    applySort();
+}
+
+void BrowseScreen::applyFilters() {
     Playlist* currentPlaylist = app->getPlayer()->getCurrentPlaylist();
     if (currentPlaylist == nullptr) return;
 
     displayedSongs.clear();
-    if (!isSearchMode || searchQuery.empty()) {
-        displayedSongs = currentPlaylist->getSongs();
-    } else {
-        string lowerQuery = searchQuery;
-        transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+    string lowerQuery = searchQuery;
+    transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
 
-        for (Song* song : currentPlaylist->getSongs()) {
+    for (Song* song : currentPlaylist->getSongs()) {
+        if (currentFilterType == FilterType::ARTIST && song->getArtist() != currentFilterValue) continue;
+        if (currentFilterType == FilterType::ALBUM && song->getAlbum() != currentFilterValue) continue;
+
+        if (isSearchMode && !searchQuery.empty()) {
             string t = song->getTitle(); 
             string a = song->getArtist(); 
             string al = song->getAlbum(); 
@@ -51,14 +60,17 @@ void BrowseScreen::updateDisplay() {
             transform(a.begin(), a.end(), a.begin(), ::tolower);
             transform(al.begin(), al.end(), al.begin(), ::tolower);
 
-            if (t.find(lowerQuery) != string::npos || 
-                a.find(lowerQuery) != string::npos || 
-                al.find(lowerQuery) != string::npos) {
-                displayedSongs.push_back(song);
+            if (t.find(lowerQuery) == string::npos && 
+                a.find(lowerQuery) == string::npos && 
+                al.find(lowerQuery) == string::npos) {
+                continue; 
             }
         }
+        displayedSongs.push_back(song);
     }
+}
 
+void BrowseScreen::applySort() {
     std::sort(displayedSongs.begin(), displayedSongs.end(), [this](Song* a, Song* b) {
         if (currentSort == SortCriteria::TITLE) {
             return sortAscending ? (a->getTitle() < b->getTitle()) : (a->getTitle() > b->getTitle());
@@ -76,9 +88,18 @@ void BrowseScreen::updateDisplay() {
 
 void BrowseScreen::render() {
     UIRenderer::clearScreen();
-    
+    drawHeader();
+    drawSongTable();
+    drawFooter();
+}
+
+void BrowseScreen::drawHeader() {
     Playlist* currentPlaylist = app->getPlayer()->getCurrentPlaylist();
     string playlistName = (currentPlaylist != nullptr) ? currentPlaylist->getName() : "None";
+    
+    if (currentFilterType != FilterType::NONE) {
+        playlistName += " [" + currentFilterValue + "]";
+    }
     
     int totalSongCount = (currentPlaylist != nullptr) ? currentPlaylist->getSongs().size() : 0;
 
@@ -102,7 +123,7 @@ void BrowseScreen::render() {
         }
         string arrow = sortAscending ? "\xE2\x86\x91" : "\xE2\x86\x93"; 
         rightTitle = "Sort: " + sortName + " " + arrow;
-        rightTitleVisualLength = rightTitle.length() - 2;
+        rightTitleVisualLength = rightTitle.length() - 2; 
     }
     
     int titleSpaces = 52 - leftTitle.length() - rightTitleVisualLength;
@@ -113,41 +134,46 @@ void BrowseScreen::render() {
     cout << "╠══════════════════════════════════════════════════════╣\n";
     cout << "║ " << COLOR_CYAN << "#   Title                  Artist               Dur  " << COLOR_BLUE << "║\n";
     cout << "╠══════════════════════════════════════════════════════╣\n";
+}
 
+void BrowseScreen::drawSongTable() {
     if (displayedSongs.empty()) {
         cout << "║ " << COLOR_RED << left << setw(52) << setfill(' ') << "No songs to display." << COLOR_BLUE << " ║\n";
-    } else {
-        Song* currentlyPlaying = app->getPlayer()->getCurrentSong();
+        return;
+    } 
 
-        for (size_t i = 0; i < displayedSongs.size(); ++i) {
-            Song* song = displayedSongs[i];
-            
-            string idx = to_string(i + 1);
-            if (idx.length() < 2) idx += " "; 
-            
-            bool isActive = (song == currentlyPlaying);
-            string activeMarker = isActive ? "\xE2\x96\xB6 " : "  "; 
-            string activeColor = isActive ? COLOR_GREEN : COLOR_WHITE;
+    Song* currentlyPlaying = app->getPlayer()->getCurrentSong();
 
-            string t = song->getTitle();
-            if (t.length() > 22) t = t.substr(0, 21) + ".";
-            string titlePad(23 - t.length(), ' ');
+    for (size_t i = 0; i < displayedSongs.size(); ++i) {
+        Song* song = displayedSongs[i];
+        
+        string idx = to_string(i + 1);
+        if (idx.length() < 2) idx += " "; 
+        
+        bool isActive = (song == currentlyPlaying);
+        string activeMarker = isActive ? "\xE2\x96\xB6 " : "  "; 
+        string activeColor = isActive ? COLOR_GREEN : COLOR_WHITE;
 
-            string a = song->getArtist();
-            if (a.length() > 19) a = a.substr(0, 18) + ".";
-            string artistPad(20 - a.length(), ' ');
+        string t = song->getTitle();
+        if (t.length() > 22) t = t.substr(0, 21) + ".";
+        string titlePad(23 - t.length(), ' ');
 
-            int mins = song->getDurationSec() / 60;
-            int secs = song->getDurationSec() % 60;
-            stringstream ss;
-            ss << setfill('0') << setw(2) << mins << ":" << setfill('0') << setw(2) << secs;
-            string dur = ss.str();
+        string a = song->getArtist();
+        if (a.length() > 19) a = a.substr(0, 18) + ".";
+        string artistPad(20 - a.length(), ' ');
 
-            cout << "║ " << COLOR_WHITE << idx << activeColor << activeMarker << COLOR_WHITE 
-                 << t << titlePad << a << artistPad << dur << COLOR_BLUE << " ║\n";
-        }
+        int mins = song->getDurationSec() / 60;
+        int secs = song->getDurationSec() % 60;
+        stringstream ss;
+        ss << setfill('0') << setw(2) << mins << ":" << setfill('0') << setw(2) << secs;
+        string dur = ss.str();
+
+        cout << "║ " << COLOR_WHITE << idx << activeColor << activeMarker << COLOR_WHITE 
+             << t << titlePad << a << artistPad << dur << COLOR_BLUE << " ║\n";
     }
+}
 
+void BrowseScreen::drawFooter() {
     cout << "╠══════════════════════════════════════════════════════╣\n";
     if (showSortMenu) {
         cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "Sort by: 1.Title  2.Artist  3.Album  4.Year  5.Dur" << COLOR_BLUE << " ║\n";
@@ -200,14 +226,20 @@ void BrowseScreen::handleInput() {
 
     if (!isSearchMode) {
         if (input == "0") {
-            app->changeScreen(new MainMenuScreen(app));
-            return;
+            if (currentFilterType != FilterType::NONE) {
+                currentFilterType = FilterType::NONE;
+                currentFilterValue = "";
+                updateDisplay();
+                return;
+            } else {
+                app->changeScreen(new MainMenuScreen(app));
+                return;
+            }
         } else if (input == "s") {
             showSortMenu = true;
             return;
         } else if (input == "f") {
-            cout << "\nFilter Menu coming soon...\n";
-            InputHandler::pauseForUser();
+            app->changeScreen(new FilterScreen(app));
             return;
         } else if (input == "/") {
             isSearchMode = true;
@@ -220,24 +252,28 @@ void BrowseScreen::handleInput() {
 
     try {
         int choice = stoi(input);
-        if (choice > 0 && choice <= static_cast<int>(displayedSongs.size())) {
-            Song* selectedSong = displayedSongs[choice - 1];
-            
-            Playlist* currentPlaylist = app->getPlayer()->getCurrentPlaylist();
-            auto allSongs = currentPlaylist->getSongs();
-            
-            int originalIndex = 0;
-            for (size_t i = 0; i < allSongs.size(); ++i) {
-                if (allSongs[i] == selectedSong) {
-                    originalIndex = i;
-                    break;
-                }
-            }
-            
-            app->getPlayer()->play(originalIndex);
-            app->changeScreen(new NowPlayingScreen(app));
-        }
+        playSelectedSong(choice);
     } catch (const exception& e) {
         //Pass
+    }
+}
+
+void BrowseScreen::playSelectedSong(int choice) {
+    if (choice > 0 && choice <= static_cast<int>(displayedSongs.size())) {
+        Song* selectedSong = displayedSongs[choice - 1];
+        
+        Playlist* currentPlaylist = app->getPlayer()->getCurrentPlaylist();
+        auto allSongs = currentPlaylist->getSongs();
+        
+        int originalIndex = 0;
+        for (size_t i = 0; i < allSongs.size(); ++i) {
+            if (allSongs[i] == selectedSong) {
+                originalIndex = i;
+                break;
+            }
+        }
+        
+        app->getPlayer()->play(originalIndex);
+        app->changeScreen(new NowPlayingScreen(app));
     }
 }

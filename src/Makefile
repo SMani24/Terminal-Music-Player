@@ -21,6 +21,7 @@ SRCS = main.cpp \
        PlaylistsScreen.cpp \
        SettingsScreen.cpp \
        BrowseScreen.cpp \
+       FilterScreen.cpp \
        Application.cpp
 
 # Object files (automatically swaps .cpp extension for .o)
