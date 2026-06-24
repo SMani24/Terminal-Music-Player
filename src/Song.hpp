@@ -17,6 +17,7 @@ private:
     int year;
     int durationSec; 
     std::string filePath;
+    int playCount;
 
 public:
     Song(const std::string& title, const std::string& artist, 
@@ -30,4 +31,7 @@ public:
     int getYear() const;
     int getDurationSec() const;
     std::string getFilePath() const;
+    int getPlayCount() const;
+    void setPlayCount(int count);
+    void incrementPlayCount();
 };

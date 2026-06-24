@@ -20,7 +20,6 @@ void NowPlayingScreen::render() {
     UIRenderer::clearScreen();
     
     cout << COLOR_BLUE << "╔══════════════════════════════════════════════════════╗\n";
-    
     cout << "║ " << COLOR_YELLOW << left << setw(52) << setfill(' ') << "Now Playing" << COLOR_BLUE << " ║\n";
     cout << "╠══════════════════════════════════════════════════════╣\n";
 
@@ -40,9 +39,7 @@ void NowPlayingScreen::render() {
             }
             
             int spacesNeeded = 52 - visualLength;
-            if (spacesNeeded < 0) {
-                spacesNeeded = 0;
-            }
+            if (spacesNeeded < 0) spacesNeeded = 0;
             
             string padding(spacesNeeded, ' ');
             cout << "║ " << COLOR_CYAN << label << valueColor << value << padding << COLOR_BLUE << " ║\n";
@@ -79,17 +76,23 @@ void NowPlayingScreen::render() {
         }
         drawPaddedLine("Playlist: ", playlistName, COLOR_WHITE);
 
-        int duration = currentSong->getDurationSec();
-        int mins = duration / 60;
-        int secs = duration % 60;
+        int totalDur = currentSong->getDurationSec();
+        int tMins = totalDur / 60;
+        int tSecs = totalDur % 60;
+        
+        int curTime = player->getCurrentTimeSec(); 
+        int cMins = curTime / 60;
+        int cSecs = curTime % 60;
         
         stringstream ss;
-        ss << setfill('0') << setw(2) << mins << ":" << setfill('0') << setw(2) << secs;
-        drawPaddedLine("Duration: ", ss.str(), COLOR_WHITE);
+        ss << setfill('0') << setw(2) << cMins << ":" << setfill('0') << setw(2) << cSecs 
+           << " / " 
+           << setfill('0') << setw(2) << tMins << ":" << setfill('0') << setw(2) << tSecs;
+           
+        drawPaddedLine("Time: ", ss.str(), COLOR_WHITE);
     }
 
     cout << COLOR_BLUE << "╠══════════════════════════════════════════════════════╣\n";
-    
     cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[p] pause/play  [n] next  [b] prev  [s] stop" << COLOR_BLUE << " ║\n";
     cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[0] menu" << COLOR_BLUE << " ║\n";
     cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
@@ -98,8 +101,12 @@ void NowPlayingScreen::render() {
 }
 
 void NowPlayingScreen::handleInput() {
-    char input = InputHandler::getRawChar();
+    char input = InputHandler::getRawCharWithTimeout(10);
     Player* player = app->getPlayer();
+
+    if (input == '\0') {
+        return; 
+    }
 
     if (input == '0') {
         app->changeScreen(new MainMenuScreen(app));

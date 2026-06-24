@@ -20,6 +20,7 @@ Song::Song(const string& title, const string& artist,
     this->year = year;
     this->durationSec = durationSec;
     this->filePath = filePath;
+    playCount = 0;
 }
 
 string Song::getTitle() const { return title; }
@@ -29,3 +30,6 @@ string Song::getGenre() const { return genre; }
 int Song::getYear() const { return year; }
 int Song::getDurationSec() const { return durationSec; }
 string Song::getFilePath() const { return filePath; }
+int Song::getPlayCount() const { return playCount; }
+void Song::setPlayCount(int count) { playCount = count; }
+void Song::incrementPlayCount() { playCount++; }

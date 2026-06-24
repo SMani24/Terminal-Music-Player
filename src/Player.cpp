@@ -158,3 +158,20 @@ Song* Player::getCurrentSong() const {
 PlayerState Player::getState() const { return state; }
 PlaybackMode Player::getMode() const { return mode; }
 Playlist* Player::getCurrentPlaylist() const { return currentPlaylist; }
+
+int Player::getCurrentTimeSec() {
+    if (!isSoundLoaded || state == PlayerState::STOPPED) {
+        return 0;
+    }
+
+    ma_uint64 cursorInFrames = 0;
+    ma_sound_get_cursor_in_pcm_frames(&sound, &cursorInFrames);
+    
+    ma_uint32 sampleRate = ma_engine_get_sample_rate(&engine);
+    
+    if (sampleRate > 0) {
+        return static_cast<int>(cursorInFrames / sampleRate);
+    }
+    
+    return 0;
+}

@@ -43,6 +43,7 @@ void InputHandler::pauseForUser() {
 }
 
 char InputHandler::getRawChar() {
+    cout.flush();
     char buf = 0;
     struct termios old = {};
     
@@ -73,6 +74,32 @@ char InputHandler::getRawChar() {
     if (tcsetattr(STDIN_FILENO, TCSADRAIN, &old) < 0) {
         perror("tcsetattr ~ICANON");
     }
+    
+    return buf;
+}
+
+char InputHandler::getRawCharWithTimeout(int tenthsOfASecond) {
+    cout.flush();
+    char buf = '\0'; 
+    struct termios old = {};
+    
+    if (tcgetattr(STDIN_FILENO, &old) < 0) {
+        return '\0';
+    }
+    
+    old.c_lflag &= ~ICANON;
+    old.c_lflag &= ~ECHO;
+    
+    old.c_cc[VMIN] = 0; 
+    old.c_cc[VTIME] = tenthsOfASecond;
+    
+    tcsetattr(STDIN_FILENO, TCSANOW, &old);
+    
+    read(STDIN_FILENO, &buf, 1);
+    
+    old.c_lflag |= ICANON;
+    old.c_lflag |= ECHO;
+    tcsetattr(STDIN_FILENO, TCSADRAIN, &old);
     
     return buf;
 }

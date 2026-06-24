@@ -15,4 +15,5 @@ public:
     static void pauseForUser();
     
     static char getRawChar();
+    static char getRawCharWithTimeout(int tenthsOfASecond);
 };

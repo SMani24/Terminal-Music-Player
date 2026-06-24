@@ -57,4 +57,5 @@ public:
     Playlist* getCurrentPlaylist() const;
     PlayerState getState() const;
     PlaybackMode getMode() const;
+    int getCurrentTimeSec();
 };
