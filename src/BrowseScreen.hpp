@@ -9,11 +9,26 @@
 #include "Screen.hpp"
 #include "Song.hpp"
 #include <vector>
+#include <string>
+
+enum class SortCriteria {
+    TITLE,
+    ARTIST,
+    ALBUM,
+    YEAR,
+    DURATION
+};
 
 class BrowseScreen : public Screen {
 private:
     std::vector<Song*> displayedSongs;
     
+    bool showSortMenu;
+    SortCriteria currentSort;
+    bool sortAscending;
+
+    void applySort();
+
 public:
     BrowseScreen(Application* appPtr);
     

@@ -11,6 +11,7 @@
 #include "Application.hpp"
 #include "UIRenderer.hpp"
 #include "InputHandler.hpp"
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -19,10 +20,31 @@
 using namespace std;
 
 BrowseScreen::BrowseScreen(Application* appPtr) : Screen(appPtr) {
+    showSortMenu = false;
+    currentSort = SortCriteria::TITLE;
+    sortAscending = true;
+
     Playlist* currentPlaylist = app->getPlayer()->getCurrentPlaylist();
     if (currentPlaylist != nullptr) {
         displayedSongs = currentPlaylist->getSongs();
+        applySort();
     }
+}
+
+void BrowseScreen::applySort() {
+    std::sort(displayedSongs.begin(), displayedSongs.end(), [this](Song* a, Song* b) {
+        if (currentSort == SortCriteria::TITLE) {
+            return sortAscending ? (a->getTitle() < b->getTitle()) : (a->getTitle() > b->getTitle());
+        } else if (currentSort == SortCriteria::ARTIST) {
+            return sortAscending ? (a->getArtist() < b->getArtist()) : (a->getArtist() > b->getArtist());
+        } else if (currentSort == SortCriteria::ALBUM) {
+            return sortAscending ? (a->getAlbum() < b->getAlbum()) : (a->getAlbum() > b->getAlbum());
+        } else if (currentSort == SortCriteria::YEAR) {
+            return sortAscending ? (a->getYear() < b->getYear()) : (a->getYear() > b->getYear());
+        } else {
+            return sortAscending ? (a->getDurationSec() < b->getDurationSec()) : (a->getDurationSec() > b->getDurationSec());
+        }
+    });
 }
 
 void BrowseScreen::render() {
@@ -34,10 +56,23 @@ void BrowseScreen::render() {
 
     cout << COLOR_BLUE << "╔══════════════════════════════════════════════════════╗\n";
     
-    string leftTitle = playlistName + " (" + to_string(songCount) + " songs)";
-    string rightTitle = "Sort: Title \xE2\x86\x91";
+    string sortName;
+    switch (currentSort) {
+        case SortCriteria::TITLE: sortName = "Title"; break;
+        case SortCriteria::ARTIST: sortName = "Artist"; break;
+        case SortCriteria::ALBUM: sortName = "Album"; break;
+        case SortCriteria::YEAR: sortName = "Year"; break;
+        case SortCriteria::DURATION: sortName = "Dur"; break;
+    }
     
-    int titleSpaces = 52 - leftTitle.length() - 13;
+    string arrow = sortAscending ? "\xE2\x86\x91" : "\xE2\x86\x93"; // UTF-8 Up (↑) or Down (↓)
+    
+    string leftTitle = playlistName + " (" + to_string(songCount) + " songs)";
+    string rightTitle = "Sort: " + sortName + " " + arrow;
+    
+    int rightTitleVisualLength = rightTitle.length() - 2; 
+    
+    int titleSpaces = 52 - leftTitle.length() - rightTitleVisualLength;
     if (titleSpaces < 0) titleSpaces = 0;
     string titlePadding(titleSpaces, ' ');
     
@@ -59,7 +94,7 @@ void BrowseScreen::render() {
             if (idx.length() < 2) idx += " "; 
             
             bool isActive = (song == currentlyPlaying);
-            string activeMarker = isActive ? "\xE2\x96\xB6 " : "  "; // UTF-8 Hex for Play Arrow (▶)
+            string activeMarker = isActive ? "\xE2\x96\xB6 " : "  "; 
             string activeColor = isActive ? COLOR_GREEN : COLOR_WHITE;
 
             string t = song->getTitle();
@@ -82,21 +117,38 @@ void BrowseScreen::render() {
     }
 
     cout << "╠══════════════════════════════════════════════════════╣\n";
-    cout << "║ " << COLOR_WHITE << "[num] play song  [s] sort  [f] filter  [/] search   " << COLOR_BLUE << " ║\n";
-    cout << "║ " << COLOR_WHITE << "[0] back                                            " << COLOR_BLUE << " ║\n";
-    cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
-    
-    cout << COLOR_CYAN << "Choice: " << COLOR_RESET;
+    if (!showSortMenu) {
+        cout << "║ " << COLOR_WHITE << "[num] play song  [s] sort  [f] filter  [/] search   " << COLOR_BLUE << " ║\n";
+        cout << "║ " << COLOR_WHITE << "[0] back                                            " << COLOR_BLUE << " ║\n";
+        cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
+        cout << COLOR_CYAN << "Choice: " << COLOR_RESET;
+    } else {
+        cout << "║ " << COLOR_WHITE << "Sort by: 1.Title  2.Artist  3.Album  4.Year  5.Dur  " << COLOR_BLUE << " ║\n";
+        cout << "║ " << COLOR_WHITE << "Add + for descending (e.g. 4+ for Year desc)        " << COLOR_BLUE << " ║\n";
+        cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
+        cout << COLOR_CYAN << "Sort choice: " << COLOR_RESET;
+    }
 }
 
 void BrowseScreen::handleInput() {
     string input = InputHandler::readLine();
 
+    if (showSortMenu) {
+        if (input == "1" || input == "1+") { currentSort = SortCriteria::TITLE; sortAscending = (input == "1"); }
+        else if (input == "2" || input == "2+") { currentSort = SortCriteria::ARTIST; sortAscending = (input == "2"); }
+        else if (input == "3" || input == "3+") { currentSort = SortCriteria::ALBUM; sortAscending = (input == "3"); }
+        else if (input == "4" || input == "4+") { currentSort = SortCriteria::YEAR; sortAscending = (input == "4"); }
+        else if (input == "5" || input == "5+") { currentSort = SortCriteria::DURATION; sortAscending = (input == "5"); }
+        
+        applySort();
+        showSortMenu = false;
+        return;
+    }
+
     if (input == "0") {
         app->changeScreen(new MainMenuScreen(app));
     } else if (input == "s") {
-        cout << "\nSort Menu coming soon...\n";
-        InputHandler::pauseForUser();
+        showSortMenu = true; 
     } else if (input == "f") {
         cout << "\nFilter Menu coming soon...\n";
         InputHandler::pauseForUser();
