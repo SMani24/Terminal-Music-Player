@@ -6,13 +6,12 @@
  * Constant names: UPPER_SNAKE_CASE
  */
 #pragma once
-#include <string>
+#include "Screen.hpp"
 
-class InputHandler {
+class MainMenuScreen : public Screen {
 public:
-    static int readInt(int min, int max);
-    static std::string readLine();
-    static void pauseForUser();
+    MainMenuScreen(Application* appPtr) : Screen(appPtr) {}
     
-    static char getRawChar();
+    void render() override;
+    void handleInput() override;
 };

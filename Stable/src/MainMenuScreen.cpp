@@ -55,25 +55,23 @@ void MainMenuScreen::render() {
 }
 
 void MainMenuScreen::handleInput() {
-    char choice = InputHandler::getRawChar();
-    
+    int choice = InputHandler::readInt(0, 4);
+
     switch (choice) {
-        case '1':
+        case 1:
             app->changeScreen(new NowPlayingScreen(app));
             break;
-        case '2':
+        case 2:
             app->changeScreen(new PlaylistsScreen(app));
             break;
-        case '3':
+        case 3:
             app->changeScreen(new BrowseScreen(app));
             break;
-        case '4':
+        case 4:
             app->changeScreen(new SettingsScreen(app));
             break;
-        case '0':
+        case 0:
             app->shutdown();
-            break;
-        default:
             break;
     }
 }

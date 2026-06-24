@@ -11,8 +11,7 @@
 class InputHandler {
 public:
     static int readInt(int min, int max);
+    
     static std::string readLine();
     static void pauseForUser();
-    
-    static char getRawChar();
 };

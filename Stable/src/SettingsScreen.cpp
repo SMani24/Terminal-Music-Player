@@ -49,9 +49,9 @@ void SettingsScreen::render() {
 }
 
 void SettingsScreen::handleInput() {
-    char choice = InputHandler::getRawChar();
+    int choice = InputHandler::readInt(0, 4);
 
-    if (choice == '0') {
+    if (choice == 0) {
         app->changeScreen(new MainMenuScreen(app));
         return;
     }
@@ -61,24 +61,22 @@ void SettingsScreen::handleInput() {
     string modeString = "";
 
     switch (choice) {
-        case '1':
+        case 1:
             player->setMode(PlaybackMode::NO_REPEAT);
             modeString = "NO_REPEAT";
             break;
-        case '2':
+        case 2:
             player->setMode(PlaybackMode::REPEAT_ONE);
             modeString = "REPEAT_ONE";
             break;
-        case '3':
+        case 3:
             player->setMode(PlaybackMode::REPEAT_ALL);
             modeString = "REPEAT_ALL";
             break;
-        case '4':
+        case 4:
             player->setMode(PlaybackMode::SHUFFLE);
             modeString = "SHUFFLE";
             break;
-        default:
-            return;
     }
 
     config->set("playback_mode", modeString);

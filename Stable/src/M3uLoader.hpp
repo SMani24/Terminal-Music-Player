@@ -6,13 +6,11 @@
  * Constant names: UPPER_SNAKE_CASE
  */
 #pragma once
+#include "Playlist.hpp"
+#include "MusicLibrary.hpp"
 #include <string>
 
-class InputHandler {
+class M3uLoader {
 public:
-    static int readInt(int min, int max);
-    static std::string readLine();
-    static void pauseForUser();
-    
-    static char getRawChar();
+    static Playlist load(const std::string& filePath, const std::string& playlistName, const MusicLibrary& library);
 };

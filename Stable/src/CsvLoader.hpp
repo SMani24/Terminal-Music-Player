@@ -6,13 +6,10 @@
  * Constant names: UPPER_SNAKE_CASE
  */
 #pragma once
+#include "MusicLibrary.hpp"
 #include <string>
 
-class InputHandler {
+class CsvLoader {
 public:
-    static int readInt(int min, int max);
-    static std::string readLine();
-    static void pauseForUser();
-    
-    static char getRawChar();
+    static void load(const std::string& filePath, MusicLibrary& library);
 };

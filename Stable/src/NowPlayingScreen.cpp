@@ -98,12 +98,12 @@ void NowPlayingScreen::render() {
 }
 
 void NowPlayingScreen::handleInput() {
-    char input = InputHandler::getRawChar();
+    string input = InputHandler::readLine();
     Player* player = app->getPlayer();
 
-    if (input == '0') {
+    if (input == "0") {
         app->changeScreen(new MainMenuScreen(app));
-    } else if (input == 'p') {
+    } else if (input == "p") {
         if (player->getState() == PlayerState::PLAYING) {
             player->pause();
         } else {
@@ -112,11 +112,11 @@ void NowPlayingScreen::handleInput() {
                 player->play(); 
             }
         }
-    } else if (input == 'n') {
+    } else if (input == "n") {
         player->next();
-    } else if (input == 'b') {
+    } else if (input == "b") {
         player->prev();
-    } else if (input == 's') {
+    } else if (input == "s") {
         player->stop();
     } else {
         //Pass
