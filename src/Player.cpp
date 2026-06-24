@@ -68,7 +68,7 @@ void Player::play(int index) {
     ma_sound_start(&sound);
     state = PlayerState::PLAYING;
     
-    cout << "Playing: " << songToPlay->getTitle() << " by " << songToPlay->getArtist() << "\n";
+    songToPlay->incrementPlayCount();
 }
 
 void Player::pause() {

@@ -38,6 +38,10 @@ void NowPlayingScreen::render() {
                 visualLength -= 2; 
             }
             
+            if (value.find("⭐") != string::npos) {
+                visualLength -= 1;
+            }
+            
             int spacesNeeded = 52 - visualLength;
             if (spacesNeeded < 0) spacesNeeded = 0;
             

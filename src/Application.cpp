@@ -27,6 +27,12 @@ void Application::init() {
     config.load();
     CsvLoader::load("Data/library.csv", library);
     
+    for (Song* song : library.getSongs()) {
+        string key = "playcount_" + song->getFilePath(); 
+        string countStr = config.get(key, "0");
+        song->setPlayCount(stoi(countStr));
+    }
+    
     string playlistDir = "Data/Playlists";
     if (fs::exists(playlistDir) && fs::is_directory(playlistDir)) {
         for (const auto& entry : fs::directory_iterator(playlistDir)) {
@@ -37,6 +43,27 @@ void Application::init() {
         }
     } else {
         cerr << "Warning: Playlist directory not found at " << playlistDir << "\n";
+    }
+
+    Playlist mostPlayed("⭐ Most Played");
+    vector<Song*> playedSongs;
+    
+    for (Song* s : library.getSongs()) {
+        if (s->getPlayCount() > 0) {
+            playedSongs.push_back(s);
+        }
+    }
+    
+    sort(playedSongs.begin(), playedSongs.end(), [](Song* a, Song* b) {
+        return a->getPlayCount() > b->getPlayCount();
+    });
+    
+    for (size_t i = 0; i < playedSongs.size() && i < 10; ++i) {
+        mostPlayed.addSong(playedSongs[i]);
+    }
+    
+    if (!mostPlayed.getSongs().empty()) {
+        playlists.insert(playlists.begin(), mostPlayed);
     }
 
     string activePlaylistName = config.get("active_playlist", "");
@@ -89,6 +116,13 @@ void Application::run() {
 }
 
 void Application::shutdown() {
+    for (Song* song : library.getSongs()) {
+        if (song->getPlayCount() > 0) {
+            string key = "playcount_" + song->getFilePath();
+            config.set(key, to_string(song->getPlayCount()));
+        }
+    }
+    
     config.save();
     running = false;
 }

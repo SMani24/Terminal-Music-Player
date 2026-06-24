@@ -10,6 +10,7 @@
 #include "Player.hpp"
 #include "ConfigManager.hpp"
 #include "Screen.hpp"
+#include <algorithm>
 #include <vector>
 
 class Application {

@@ -45,7 +45,14 @@ void PlaylistsScreen::render() {
         while(pIndex.length() < 3) pIndex += " ";
         pIndex += " ";
 
-        int nameVisibleLength = isActive ? (nameStr.length() - 2) : nameStr.length();
+        int nameVisibleLength = nameStr.length();
+        if (isActive) {
+            nameVisibleLength -= 2;
+        }
+        if (nameStr.find("⭐") != string::npos) {
+            nameVisibleLength -= 1; 
+        }
+        
         string pName = nameStr;
         int namePadding = 29 - nameVisibleLength;
         if (namePadding > 0) pName.append(namePadding, ' ');
