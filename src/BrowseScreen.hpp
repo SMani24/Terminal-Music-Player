@@ -27,7 +27,10 @@ private:
     SortCriteria currentSort;
     bool sortAscending;
 
-    void applySort();
+    bool isSearchMode;
+    std::string searchQuery;
+
+    void updateDisplay();
 
 public:
     BrowseScreen(Application* appPtr);

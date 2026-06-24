@@ -11,11 +11,12 @@
 #include "Application.hpp"
 #include "UIRenderer.hpp"
 #include "InputHandler.hpp"
-#include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <sstream>
+#include <algorithm>
+#include <cctype>
 
 using namespace std;
 
@@ -23,15 +24,41 @@ BrowseScreen::BrowseScreen(Application* appPtr) : Screen(appPtr) {
     showSortMenu = false;
     currentSort = SortCriteria::TITLE;
     sortAscending = true;
+    
+    isSearchMode = false;
+    searchQuery = "";
 
-    Playlist* currentPlaylist = app->getPlayer()->getCurrentPlaylist();
-    if (currentPlaylist != nullptr) {
-        displayedSongs = currentPlaylist->getSongs();
-        applySort();
-    }
+    updateDisplay();
 }
 
-void BrowseScreen::applySort() {
+void BrowseScreen::updateDisplay() {
+    Playlist* currentPlaylist = app->getPlayer()->getCurrentPlaylist();
+    if (currentPlaylist == nullptr) return;
+
+    displayedSongs.clear();
+    if (!isSearchMode || searchQuery.empty()) {
+        displayedSongs = currentPlaylist->getSongs();
+    } else {
+        string lowerQuery = searchQuery;
+        transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+
+        for (Song* song : currentPlaylist->getSongs()) {
+            string t = song->getTitle(); 
+            string a = song->getArtist(); 
+            string al = song->getAlbum(); 
+            
+            transform(t.begin(), t.end(), t.begin(), ::tolower);
+            transform(a.begin(), a.end(), a.begin(), ::tolower);
+            transform(al.begin(), al.end(), al.begin(), ::tolower);
+
+            if (t.find(lowerQuery) != string::npos || 
+                a.find(lowerQuery) != string::npos || 
+                al.find(lowerQuery) != string::npos) {
+                displayedSongs.push_back(song);
+            }
+        }
+    }
+
     std::sort(displayedSongs.begin(), displayedSongs.end(), [this](Song* a, Song* b) {
         if (currentSort == SortCriteria::TITLE) {
             return sortAscending ? (a->getTitle() < b->getTitle()) : (a->getTitle() > b->getTitle());
@@ -52,25 +79,31 @@ void BrowseScreen::render() {
     
     Playlist* currentPlaylist = app->getPlayer()->getCurrentPlaylist();
     string playlistName = (currentPlaylist != nullptr) ? currentPlaylist->getName() : "None";
-    int songCount = displayedSongs.size();
+    
+    int totalSongCount = (currentPlaylist != nullptr) ? currentPlaylist->getSongs().size() : 0;
 
     cout << COLOR_BLUE << "╔══════════════════════════════════════════════════════╗\n";
     
-    string sortName;
-    switch (currentSort) {
-        case SortCriteria::TITLE: sortName = "Title"; break;
-        case SortCriteria::ARTIST: sortName = "Artist"; break;
-        case SortCriteria::ALBUM: sortName = "Album"; break;
-        case SortCriteria::YEAR: sortName = "Year"; break;
-        case SortCriteria::DURATION: sortName = "Dur"; break;
+    string leftTitle = playlistName + " (" + to_string(totalSongCount) + " songs)";
+    string rightTitle;
+    int rightTitleVisualLength;
+
+    if (isSearchMode) {
+        rightTitle = "Search: \"" + searchQuery + "\"";
+        rightTitleVisualLength = rightTitle.length();
+    } else {
+        string sortName;
+        switch (currentSort) {
+            case SortCriteria::TITLE: sortName = "Title"; break;
+            case SortCriteria::ARTIST: sortName = "Artist"; break;
+            case SortCriteria::ALBUM: sortName = "Album"; break;
+            case SortCriteria::YEAR: sortName = "Year"; break;
+            case SortCriteria::DURATION: sortName = "Dur"; break;
+        }
+        string arrow = sortAscending ? "\xE2\x86\x91" : "\xE2\x86\x93"; 
+        rightTitle = "Sort: " + sortName + " " + arrow;
+        rightTitleVisualLength = rightTitle.length() - 2;
     }
-    
-    string arrow = sortAscending ? "\xE2\x86\x91" : "\xE2\x86\x93"; // UTF-8 Up (↑) or Down (↓)
-    
-    string leftTitle = playlistName + " (" + to_string(songCount) + " songs)";
-    string rightTitle = "Sort: " + sortName + " " + arrow;
-    
-    int rightTitleVisualLength = rightTitle.length() - 2; 
     
     int titleSpaces = 52 - leftTitle.length() - rightTitleVisualLength;
     if (titleSpaces < 0) titleSpaces = 0;
@@ -78,7 +111,6 @@ void BrowseScreen::render() {
     
     cout << "║ " << COLOR_YELLOW << leftTitle << titlePadding << rightTitle << COLOR_BLUE << " ║\n";
     cout << "╠══════════════════════════════════════════════════════╣\n";
-    
     cout << "║ " << COLOR_CYAN << "#   Title                  Artist               Dur  " << COLOR_BLUE << "║\n";
     cout << "╠══════════════════════════════════════════════════════╣\n";
 
@@ -117,16 +149,23 @@ void BrowseScreen::render() {
     }
 
     cout << "╠══════════════════════════════════════════════════════╣\n";
-    if (!showSortMenu) {
-        cout << "║ " << COLOR_WHITE << "[num] play song  [s] sort  [f] filter  [/] search   " << COLOR_BLUE << " ║\n";
-        cout << "║ " << COLOR_WHITE << "[0] back                                            " << COLOR_BLUE << " ║\n";
-        cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
-        cout << COLOR_CYAN << "Choice: " << COLOR_RESET;
-    } else {
-        cout << "║ " << COLOR_WHITE << "Sort by: 1.Title  2.Artist  3.Album  4.Year  5.Dur  " << COLOR_BLUE << " ║\n";
-        cout << "║ " << COLOR_WHITE << "Add + for descending (e.g. 4+ for Year desc)        " << COLOR_BLUE << " ║\n";
+    if (showSortMenu) {
+        cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "Sort by: 1.Title  2.Artist  3.Album  4.Year  5.Dur" << COLOR_BLUE << " ║\n";
+        cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "Add + for descending (e.g. 4+ for Year desc)" << COLOR_BLUE << " ║\n";
         cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
         cout << COLOR_CYAN << "Sort choice: " << COLOR_RESET;
+    } 
+    else if (isSearchMode) {
+        string resultText = to_string(displayedSongs.size()) + " result(s). [num] play [/] new search [0] clear";
+        cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << resultText << COLOR_BLUE << " ║\n";
+        cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
+        cout << COLOR_CYAN << "Choice: " << COLOR_RESET;
+    } 
+    else {
+        cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[num] play song  [s] sort  [f] filter  [/] search" << COLOR_BLUE << " ║\n";
+        cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[0] back" << COLOR_BLUE << " ║\n";
+        cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
+        cout << COLOR_CYAN << "Choice: " << COLOR_RESET;
     }
 }
 
@@ -140,43 +179,65 @@ void BrowseScreen::handleInput() {
         else if (input == "4" || input == "4+") { currentSort = SortCriteria::YEAR; sortAscending = (input == "4"); }
         else if (input == "5" || input == "5+") { currentSort = SortCriteria::DURATION; sortAscending = (input == "5"); }
         
-        applySort();
+        updateDisplay();
         showSortMenu = false;
         return;
     }
 
-    if (input == "0") {
-        app->changeScreen(new MainMenuScreen(app));
-    } else if (input == "s") {
-        showSortMenu = true; 
-    } else if (input == "f") {
-        cout << "\nFilter Menu coming soon...\n";
-        InputHandler::pauseForUser();
-    } else if (input == "/") {
-        cout << "\nSearch Input coming soon...\n";
-        InputHandler::pauseForUser();
-    } else {
-        try {
-            int choice = stoi(input);
-            if (choice > 0 && choice <= static_cast<int>(displayedSongs.size())) {
-                Song* selectedSong = displayedSongs[choice - 1];
-                
-                Playlist* currentPlaylist = app->getPlayer()->getCurrentPlaylist();
-                auto allSongs = currentPlaylist->getSongs();
-                
-                int originalIndex = 0;
-                for (size_t i = 0; i < allSongs.size(); ++i) {
-                    if (allSongs[i] == selectedSong) {
-                        originalIndex = i;
-                        break;
-                    }
-                }
-                
-                app->getPlayer()->play(originalIndex);
-                app->changeScreen(new NowPlayingScreen(app));
-            }
-        } catch (const exception& e) {
-            //Pass
+    if (isSearchMode) {
+        if (input == "0") {
+            isSearchMode = false;
+            searchQuery = "";
+            updateDisplay();
+            return;
+        } else if (input == "/") {
+            cout << COLOR_CYAN << "Enter search term: " << COLOR_RESET;
+            searchQuery = InputHandler::readLine();
+            updateDisplay();
+            return;
         }
+    }
+
+    if (!isSearchMode) {
+        if (input == "0") {
+            app->changeScreen(new MainMenuScreen(app));
+            return;
+        } else if (input == "s") {
+            showSortMenu = true;
+            return;
+        } else if (input == "f") {
+            cout << "\nFilter Menu coming soon...\n";
+            InputHandler::pauseForUser();
+            return;
+        } else if (input == "/") {
+            isSearchMode = true;
+            cout << COLOR_CYAN << "Enter search term: " << COLOR_RESET;
+            searchQuery = InputHandler::readLine();
+            updateDisplay();
+            return;
+        }
+    }
+
+    try {
+        int choice = stoi(input);
+        if (choice > 0 && choice <= static_cast<int>(displayedSongs.size())) {
+            Song* selectedSong = displayedSongs[choice - 1];
+            
+            Playlist* currentPlaylist = app->getPlayer()->getCurrentPlaylist();
+            auto allSongs = currentPlaylist->getSongs();
+            
+            int originalIndex = 0;
+            for (size_t i = 0; i < allSongs.size(); ++i) {
+                if (allSongs[i] == selectedSong) {
+                    originalIndex = i;
+                    break;
+                }
+            }
+            
+            app->getPlayer()->play(originalIndex);
+            app->changeScreen(new NowPlayingScreen(app));
+        }
+    } catch (const exception& e) {
+        //Pass
     }
 }
