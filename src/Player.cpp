@@ -175,3 +175,24 @@ int Player::getCurrentTimeSec() {
     
     return 0;
 }
+
+void Player::seekBy(int seconds) {
+    if (!isSoundLoaded) return; 
+
+    ma_uint64 cursor, length;
+    ma_sound_get_cursor_in_pcm_frames(&sound, &cursor);
+    ma_sound_get_length_in_pcm_frames(&sound, &length);
+    
+    ma_uint32 rate = ma_engine_get_sample_rate(&engine);
+    
+    ma_int64 newFrame = (ma_int64)cursor + (ma_int64)seconds * rate;
+    
+    if (newFrame < 0) newFrame = 0;
+    
+    if ((ma_uint64)newFrame >= length) { 
+        next(); 
+        return; 
+    }
+    
+    ma_sound_seek_to_pcm_frame(&sound, (ma_uint64)newFrame);
+}

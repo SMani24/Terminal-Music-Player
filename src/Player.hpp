@@ -50,6 +50,7 @@ public:
     void stop();
     void next();
     void prev();
+    void seekBy(int seconds);
     
     void tick(); 
     

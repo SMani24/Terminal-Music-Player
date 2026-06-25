@@ -95,7 +95,26 @@ char InputHandler::getRawCharWithTimeout(int tenthsOfASecond) {
     
     tcsetattr(STDIN_FILENO, TCSANOW, &old);
     
-    read(STDIN_FILENO, &buf, 1);
+    if (read(STDIN_FILENO, &buf, 1) > 0) {
+        // If the byte is ESC (27), check for the rest of the arrow key sequence
+        if (buf == '\033') { 
+            char seq[2];
+            
+            // Shrink the timeout to grab the next two bytes instantly
+            old.c_cc[VTIME] = 1; 
+            tcsetattr(STDIN_FILENO, TCSANOW, &old);
+            
+            if (read(STDIN_FILENO, &seq[0], 1) > 0 && read(STDIN_FILENO, &seq[1], 1) > 0) {
+                if (seq[0] == '[') {
+                    if (seq[1] == 'C') { // Right Arrow
+                        buf = 'R'; 
+                    } else if (seq[1] == 'D') { // Left Arrow
+                        buf = 'L'; 
+                    }
+                }
+            }
+        }
+    }
     
     old.c_lflag |= ICANON;
     old.c_lflag |= ECHO;

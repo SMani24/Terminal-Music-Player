@@ -106,7 +106,7 @@ void NowPlayingScreen::render() {
 
     cout << COLOR_BLUE << "╠══════════════════════════════════════════════════════╣\n";
     cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[p] pause/play  [n] next  [b] prev  [s] stop" << COLOR_BLUE << " ║\n";
-    cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[0] menu  [f] heart/unheart" << COLOR_BLUE << " ║\n";
+    cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[<->] seek +/- 10s  [0] menu  [f] heart" << COLOR_BLUE << " ║\n";
     cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
     
     cout << COLOR_CYAN << "Choice: " << COLOR_RESET;
@@ -141,6 +141,10 @@ void NowPlayingScreen::handleInput() {
         if (player->getCurrentSong() != nullptr) {
             player->getCurrentSong()->toggleFavorite();
         }
+    } else if (input == 'R') {
+        player->seekBy(10);
+    } else if (input == 'L') {
+        player->seekBy(-10);
     } else {
         //Pass
     }
