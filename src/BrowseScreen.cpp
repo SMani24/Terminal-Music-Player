@@ -126,7 +126,15 @@ void BrowseScreen::drawHeader() {
         rightTitleVisualLength = rightTitle.length() - 2; 
     }
     
-    int titleSpaces = 52 - leftTitle.length() - rightTitleVisualLength;
+    int leftTitleVisualLength = leftTitle.length();
+    if (leftTitle.find("⭐") != string::npos) {
+        leftTitleVisualLength -= 1; 
+    }
+    if (leftTitle.find("♥") != string::npos) {
+        leftTitleVisualLength -= 2; 
+    }
+    
+    int titleSpaces = 52 - leftTitleVisualLength - rightTitleVisualLength;
     if (titleSpaces < 0) titleSpaces = 0;
     string titlePadding(titleSpaces, ' ');
     
@@ -154,9 +162,16 @@ void BrowseScreen::drawSongTable() {
         string activeMarker = isActive ? "\xE2\x96\xB6 " : "  "; 
         string activeColor = isActive ? COLOR_GREEN : COLOR_WHITE;
 
+        bool isFav = song->getIsFavorite();
+        size_t maxTitleLen = isFav ? 20 : 22;
+        
         string t = song->getTitle();
-        if (t.length() > 22) t = t.substr(0, 21) + ".";
-        string titlePad(23 - t.length(), ' ');
+        if (t.length() > maxTitleLen) {
+            t = t.substr(0, maxTitleLen - 1) + ".";
+        }
+        
+        int visualLen = t.length() + (isFav ? 2 : 0);
+        string titlePad(23 - visualLen, ' ');
 
         string a = song->getArtist();
         if (a.length() > 19) a = a.substr(0, 18) + ".";
@@ -168,8 +183,13 @@ void BrowseScreen::drawSongTable() {
         ss << setfill('0') << setw(2) << mins << ":" << setfill('0') << setw(2) << secs;
         string dur = ss.str();
 
-        cout << "║ " << COLOR_WHITE << idx << activeColor << activeMarker << COLOR_WHITE 
-             << t << titlePad << a << artistPad << dur << COLOR_BLUE << " ║\n";
+        cout << "║ " << COLOR_WHITE << idx << activeColor << activeMarker << COLOR_WHITE;
+        
+        if (isFav) {
+            cout << COLOR_RED << "♥ " << COLOR_WHITE;
+        }
+        
+        cout << t << titlePad << a << artistPad << dur << COLOR_BLUE << " ║\n";
     }
 }
 

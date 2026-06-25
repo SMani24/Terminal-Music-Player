@@ -30,26 +30,34 @@ void NowPlayingScreen::render() {
         cout << "║ " << COLOR_RED << left << setw(52) << setfill(' ') << "No song is currently playing or selected." << COLOR_BLUE << " ║\n";
     } else {
         
-        auto drawPaddedLine = [](const string& label, const string& value, const string& valueColor) {
-            string rawText = label + value;
-            int visualLength = rawText.length();
+        auto drawPaddedLine = [](const string& label, const string& value, const string& valueColor, bool isFav = false) {
+            int visualLength = label.length() + value.length();
+            if (isFav) visualLength += 2; // "♥ " takes 2 visual spaces
             
             if (label == "► ") {
                 visualLength -= 2; 
             }
-            
             if (value.find("⭐") != string::npos) {
-                visualLength -= 1;
+                visualLength -= 1; 
+            }
+            if (value.find("♥") != string::npos && !isFav) {
+                visualLength -= 2;
             }
             
             int spacesNeeded = 52 - visualLength;
             if (spacesNeeded < 0) spacesNeeded = 0;
             
             string padding(spacesNeeded, ' ');
-            cout << "║ " << COLOR_CYAN << label << valueColor << value << padding << COLOR_BLUE << " ║\n";
+            cout << "║ " << COLOR_CYAN << label;
+            
+            if (isFav) {
+                cout << COLOR_RED << "♥ " << COLOR_WHITE;
+            }
+            
+            cout << valueColor << value << padding << COLOR_BLUE << " ║\n";
         };
 
-        drawPaddedLine("Title:  ", currentSong->getTitle(), COLOR_WHITE);
+        drawPaddedLine("Title:  ", currentSong->getTitle(), COLOR_WHITE, currentSong->getIsFavorite());
         drawPaddedLine("Artist: ", currentSong->getArtist(), COLOR_WHITE);
         drawPaddedLine("Album:  ", currentSong->getAlbum(), COLOR_WHITE);
         drawPaddedLine("Genre:  ", currentSong->getGenre(), COLOR_WHITE);
@@ -98,7 +106,7 @@ void NowPlayingScreen::render() {
 
     cout << COLOR_BLUE << "╠══════════════════════════════════════════════════════╣\n";
     cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[p] pause/play  [n] next  [b] prev  [s] stop" << COLOR_BLUE << " ║\n";
-    cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[0] menu" << COLOR_BLUE << " ║\n";
+    cout << "║ " << COLOR_WHITE << left << setw(52) << setfill(' ') << "[0] menu  [f] heart/unheart" << COLOR_BLUE << " ║\n";
     cout << "╚══════════════════════════════════════════════════════╝\n" << COLOR_RESET;
     
     cout << COLOR_CYAN << "Choice: " << COLOR_RESET;
@@ -129,6 +137,10 @@ void NowPlayingScreen::handleInput() {
         player->prev();
     } else if (input == 's') {
         player->stop();
+    } else if (input == 'f') {
+        if (player->getCurrentSong() != nullptr) {
+            player->getCurrentSong()->toggleFavorite();
+        }
     } else {
         //Pass
     }

@@ -52,6 +52,9 @@ void PlaylistsScreen::render() {
         if (nameStr.find("⭐") != string::npos) {
             nameVisibleLength -= 1; 
         }
+        if (nameStr.find("♥") != string::npos) {
+            nameVisibleLength -= 2;
+        }
         
         string pName = nameStr;
         int namePadding = 29 - nameVisibleLength;

@@ -31,6 +31,10 @@ void Application::init() {
         string key = "playcount_" + song->getFilePath(); 
         string countStr = config.get(key, "0");
         song->setPlayCount(stoi(countStr));
+
+        string favKey = "favorite_" + song->getFilePath();
+        string favStr = config.get(favKey, "0");
+        song->setIsFavorite(favStr == "1");
     }
     
     string playlistDir = "Data/Playlists";
@@ -62,6 +66,16 @@ void Application::init() {
         mostPlayed.addSong(playedSongs[i]);
     }
     
+    Playlist favorites("♥ Favourites");
+    for (Song* s : library.getSongs()) {
+        if (s->getIsFavorite()) {
+            favorites.addSong(s);
+        }
+    }
+
+    if (!favorites.getSongs().empty()) {
+        playlists.insert(playlists.begin(), favorites);
+    }
     if (!mostPlayed.getSongs().empty()) {
         playlists.insert(playlists.begin(), mostPlayed);
     }
@@ -121,6 +135,9 @@ void Application::shutdown() {
             string key = "playcount_" + song->getFilePath();
             config.set(key, to_string(song->getPlayCount()));
         }
+        
+        string favKey = "favorite_" + song->getFilePath();
+        config.set(favKey, song->getIsFavorite() ? "1" : "0");
     }
     
     config.save();
